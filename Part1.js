@@ -5,7 +5,7 @@ function randomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 // Get random letter A-C
-const characters = "abcdefghij".toUpperCase();
+const characters = "abc".toUpperCase();
 function generateRandomString(length) {
   let result = "";
   for (let i = 0; i < length; i++) {
@@ -14,7 +14,7 @@ function generateRandomString(length) {
   }
   return result + randomInteger(1, 3);
 }
-const gridSize = 10;
+const gridSize = 3;
 
 // Build Grid
 const buildGrid = () => {
@@ -33,6 +33,7 @@ const gameBoard = buildGrid(gridSize);
 
 // Stored boat Coordinates
 let placedBoard = [];
+let boatsLeft;
 const flatGameBoard = gameBoard.flat();
 console.log(flatGameBoard);
 let boat1;
@@ -47,6 +48,7 @@ const placer = () => {
   } else {
     placedBoard.push(boat1);
     placedBoard.push(boat2);
+    boatsLeft = [...placedBoard];
   }
   console.log("This is the board: ", placedBoard);
   return placedBoard;
@@ -60,7 +62,7 @@ const playGame = () => {
 // Guess Function
 const iGuess = () => {
   return rs.question(
-    `Enter a strike location: ${placedBoard.length} ships remaining! `,
+    `Enter a strike location: ${boatsLeft.length} ships remaining! `,
     {
       limit: flatGameBoard,
       limitMessage: `Valid Letters: ${characters}; Valid Numbers: ${gridSize}.`,
@@ -87,9 +89,9 @@ const userGuess = () => {
   if (!guessArray.includes(strike)) {
     guessArray.push(strike);
 
-    if (flatGameBoard.includes(strike)) {
+    if (placedBoard.includes(strike)) {
       console.log("Hit! One ship remaining ");
-      placedBoard = sinkShip(placedBoard, strike);
+      placedBoard = sinkShip(boatsLeft, strike);
     } else {
       console.log("No hit! 2 Ships remaining");
     }
@@ -100,7 +102,7 @@ const userGuess = () => {
 };
 
 const guessAgain = () => {
-  if (placedBoard.length < 1) {
+  if (boatsLeft.length < 1) {
     guessArray = [];
     let winner = rs.keyInYN(
       "You have destroyed all battleships. Play again? Y/N"
