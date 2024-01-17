@@ -118,7 +118,7 @@ function placeShip(index, board, directionString, ship) {
     let ogIndex = board[flatIndex];
     originalPositions.push(ogIndex);
 
-    if (ogIndex !== ship.symbol || ogIndex !== undefined) {
+    if (ogIndex !== ship.symbol && ogIndex !== undefined) {
       sinkShip(originalArray, flatIndex);
       originalArray.push(ogIndex);
       if (ogIndex === ship.symbol && ogIndex === undefined) {
@@ -128,6 +128,7 @@ function placeShip(index, board, directionString, ship) {
     } else {
       break; // Break if the position is already occupied by another ship
     }
+    console.log(ogIndex);
   }
 }
 
@@ -152,9 +153,9 @@ const iGuess = () => {
   );
 };
 
-// Handle Guess and deduct hitCount
+let guessArray = [];
+
 function userGuess(arr) {
-  let guessArray = [];
   // Strike
   strike = iGuess().toUpperCase();
 
@@ -167,7 +168,7 @@ function userGuess(arr) {
     if (!arr.includes(strike)) {
       console.log("Miss! Ships inbound!");
     } else {
-      hitCount--; // Deduct from hit count for a hit
+      hitCount--; // Deduct from hit count only for a correct hit
       console.log(`Hit! Direct strikes needed: ${hitCount} `);
     }
   }
