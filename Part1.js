@@ -65,7 +65,7 @@ const iGuess = () => {
     `Enter a strike location: ${boatsLeft.length} ships remaining! `,
     {
       limit: flatGameBoard,
-      limitMessage: `Valid Letters: ${characters}; Valid Numbers: 1 - ${gridSize}.`,
+      limitMessage: `Valid Letters: ${characters}; Valid Numbers: ${gridSize}.`,
     }
   );
 };
