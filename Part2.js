@@ -94,51 +94,47 @@ function randomDirection(ship) {
 function placeShipsRandomly(board, ships) {
   let placedBoats = [];
   for (let ship of ships) {
+    originalArray = [];
     randomLocation(board, ship);
-    placedBoats.push({ model: ship.model, positions: originalArray });
+    placedBoats.push({ model: ship.model, positions: [...originalArray] });
   }
   return placedBoats;
 }
 
 function placeShip(index, board, directionString, ship) {
   // Place the ship on the board
+  originalArray = [...flatGameBoard];
   let originalPositions = [];
-
   for (let i = 0; i < ship.length; i++) {
     let flatIndex;
 
     if (directionString === "horizontal") {
       flatIndex = Math.floor(index + i);
-      sinkShip(board, flatIndex);
     } else if (directionString === "vertical") {
       flatIndex = Math.floor(index + i * Math.sqrt(board.length));
-      sinkShip(board, flatIndex);
     }
 
     let ogIndex = board[flatIndex];
     originalPositions.push(ogIndex);
 
     if (ogIndex !== ship.symbol && ogIndex !== undefined) {
-      sinkShip(originalArray, flatIndex);
-      originalArray.push(ogIndex);
-      if (ogIndex === ship.symbol && ogIndex === undefined) {
-        board[flatIndex] = ship.symbol;
-        originalArray.push(ogIndex);
-      }
-    } else {
-      break; // Break if the position is already occupied by another ship
+      return; // Break if the position is already occupied by another ship
     }
-    console.log(ogIndex);
+    originalArray[flatIndex] = ship.symbol;
   }
+
+  // If ship can be placed, update flatGameBoard
+  for (let i = 0; i < originalArray.length; i++) {
+    flatGameBoard[i] = originalArray[i];
+  }
+  console.log(ogIndex);
 }
 
 // Remove ship from placed board
 const sinkShip = (arr, strike) => {
-  for (var i = 0; i < arr.length; i++) {
-    if (arr.includes(strike)) {
-      arr.splice(i, 1);
-      return arr;
-    }
+  let index = arr.indexOf(strike);
+  if (index !== -1) {
+    arr.splice(index, 1);
   }
 };
 
@@ -178,22 +174,35 @@ function userGuess(arr) {
 }
 
 // Guess again
-const guessAgain = (placedBoats) => {
-  if (hitCount <= 0) {
+function guessAgain(placedBoats) {
+  let remainingShips = placedBoats.filter((boat) =>
+    boat.positions.some((pos) => originalArray.includes(pos))
+  );
+  if (remainingShips.length === 0) {
     console.log("All ships destroyed! You win!");
     process.exit();
+  } else {
+    makeAGuess(placedBoats);
   }
-
-  makeAGuess();
-};
+}
 
 function makeAGuess(placedBoats) {
   userGuess(originalArray);
 }
 
+function verifyAllBoatsPlaced() {
+  if (placedBoats.length !== 17) {
+    console.log(
+      `Error! Not all boats have been placed! ${placedBoats.length} `
+    );
+    process.exit();
+  }
+}
+
 function startGame() {
   playGame();
   makeAGuess();
+  verifyAllBoatsPlaced();
 }
 
 function playGame() {
