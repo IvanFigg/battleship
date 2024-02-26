@@ -66,8 +66,11 @@ function randomLocation(flatGameBoard, ship) {
     [valid, directionString] = randomDirection(ship);
 
     if (valid) {
-      placeShip(index, flatGameBoard, directionString, ship);
-      didPlace = true;
+      // Check if the ship can be placed without going out of bounds
+      if (isValidPlacement(index, directionString, ship)) {
+        placeShip(index, flatGameBoard, directionString, ship);
+        didPlace = true;
+      }
     }
   }
 }
@@ -91,6 +94,27 @@ function randomDirection(ship) {
   return [valid, directionString];
 }
 
+function isValidPlacement(index, directionString, ship) {
+  let flatIndex = index;
+
+  for (let i = 0; i < ship.length; i++) {
+    if (
+      directionString === "horizontal" &&
+      (flatIndex + ship.length) % gridSize === 0
+    ) {
+      // Check if ship exceeds right boundary in horizontal placement
+      return false;
+    } else if (
+      directionString === "vertical" &&
+      flatIndex + (ship.length - 1) * gridSize >= flatGameBoard.length
+    ) {
+      // Check if ship exceeds bottom boundary in vertical placement
+      return false;
+    }
+    return true;
+  }
+}
+
 function placeShipsRandomly(board, ships) {
   let placedBoats = [];
   for (let ship of ships) {
@@ -106,28 +130,41 @@ function placeShip(index, board, directionString, ship) {
 
   for (let i = 0; i < ship.length; i++) {
     let flatIndex;
-
     if (directionString === "horizontal") {
       flatIndex = Math.floor(index + i);
     } else if (directionString === "vertical") {
       flatIndex = Math.floor(index + i * Math.sqrt(board.length));
     }
 
+    // Check if the ship goes out of bounds horizontally
+    if (
+      directionString === "horizontal" &&
+      Math.floor(flatIndex / gridSize) !==
+        Math.floor((flatIndex + ship.length - 1) / gridSize)
+    ) {
+      randomLocation(flatGameBoard, ship);
+      return;
+    }
+
+    // Check if the ship goes out of bounds vertically
+    if (
+      directionString === "vertical" &&
+      flatIndex + (ship.length - 1) * gridSize >= flatGameBoard.length
+    ) {
+      randomLocation(flatGameBoard, ship);
+      return;
+    }
+
     let ogIndex = board[flatIndex];
     originalPositions.push(ogIndex);
-
-    if (ogIndex !== ship.symbol || ogIndex !== undefined) {
-      // sinkShip(originalArray, flatIndex);
-      originalArray.push(ogIndex);
-      if (ogIndex === ship.symbol && ogIndex === undefined) {
-        board[flatIndex] = ship.symbol;
-        originalArray.push(ogIndex);
-      }
+    if (ogIndex !== "" && ogIndex !== undefined) {
+      randomDirection(ogIndex);
     } else {
-      break; // Break if the position is already occupied by another ship
+      originalPositions.push(ogIndex);
+      board[flatIndex] = ship.symbol;
     }
-    console.log(ogIndex);
   }
+  console.log(originalPositions);
   console.log(hitCount);
 }
 
@@ -177,7 +214,7 @@ function userGuess(arr) {
 }
 
 // Guess again
-const guessAgain = (placedBoats) => {
+const guessAgain = () => {
   if (hitCount <= 0) {
     console.log("All ships destroyed! You win!");
     process.exit();
