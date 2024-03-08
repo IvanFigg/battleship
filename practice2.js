@@ -56,24 +56,8 @@ let hitCount = 17; // Initialize hit count
 let placedBoats = [];
 let originalArray = [];
 
-function randomLocation(flatGameBoard, ship) {
-  let didPlace = false;
-  let directionString;
-  let valid;
-
-  while (!didPlace) {
-    let index = randomInteger(0, flatGameBoard.length - 1);
-    [valid, directionString] = randomDirection(ship);
-
-    if (valid) {
-      placeShip(index, flatGameBoard, directionString, ship);
-      didPlace = true;
-    }
-  }
-}
-
 function randomDirection(ship) {
-  let valid = false;
+  let valid;
   let direction = Math.floor(Math.random() * 2) + 1;
   let directionString = "";
 
@@ -91,6 +75,20 @@ function randomDirection(ship) {
   return [valid, directionString];
 }
 
+function randomLocation(flatGameBoard, ship) {
+  let directionString;
+
+  let index = randomInteger(0, flatGameBoard.length - 1);
+  directionString = randomDirection(ship);
+  let flatIndex = index;
+
+  if (flatIndex && directionString) {
+    console.log(flatIndex, directionString);
+  } else {
+    return;
+  }
+}
+
 function placeShipsRandomly(board, ships) {
   let placedBoats = [];
   for (let ship of ships) {
@@ -101,7 +99,6 @@ function placeShipsRandomly(board, ships) {
 }
 
 function placeShip(index, board, directionString, ship) {
-  // Place the ship on the board
   let originalPositions = [];
 
   for (let i = 0; i < ship.length; i++) {
@@ -109,26 +106,60 @@ function placeShip(index, board, directionString, ship) {
 
     if (directionString === "horizontal") {
       flatIndex = Math.floor(index + i);
-      sinkShip(board, flatIndex);
     } else if (directionString === "vertical") {
       flatIndex = Math.floor(index + i * Math.sqrt(board.length));
-      sinkShip(board, flatIndex);
     }
 
     let ogIndex = board[flatIndex];
-    originalPositions.push(ogIndex);
 
     if (ogIndex !== ship.symbol && ogIndex !== undefined) {
-      sinkShip(originalArray, flatIndex);
-      originalArray.push(ogIndex);
-      if (ogIndex === ship.symbol && ogIndex === undefined) {
-        board[flatIndex] = ship.symbol;
-        originalArray.push(ogIndex);
-      }
-    } else {
-      break; // Break if the position is already occupied by another ship
+      // Reset if there's an overlap or out of bounds
+      randomLocation(flatGameBoard, ship);
+      return;
     }
-    console.log(ogIndex);
+
+    board[flatIndex] = ship.symbol;
+    originalPositions.push(flatGameBoard[flatIndex]);
+  }
+
+  ship.positions = originalPositions;
+  placedBoats.push({ model: ship.model, positions: originalPositions });
+}
+
+function checkDuplicates(ships) {
+  const positions = new Set();
+
+  for (const ship of ships) {
+    for (const position of ship.positions) {
+      if (positions.has(position)) {
+        randomLocation(flatGameBoard, ship);
+      }
+      positions.add(position);
+      console.log(positions);
+    }
+  }
+
+  checkBounds(index, directionString, ship);
+}
+
+function checkBounds(index, directionString, ship) {
+  let flatIndex = index;
+
+  for (let i = 0; i < ship.length; i++) {
+    if (
+      directionString === "horizontal" &&
+      (flatIndex + ship.length) % gridSize === 0
+    ) {
+      // Check if ship exceeds right boundary in horizontal placement
+      return false;
+    } else if (
+      directionString === "vertical" &&
+      flatIndex + (ship.length - 1) * gridSize >= flatGameBoard.length
+    ) {
+      // Check if ship exceeds bottom boundary in vertical placement
+      return false;
+    }
+    return true;
   }
 }
 
@@ -178,7 +209,7 @@ function userGuess(arr) {
 }
 
 // Guess again
-const guessAgain = (placedBoats) => {
+const guessAgain = () => {
   if (hitCount <= 0) {
     console.log("All ships destroyed! You win!");
     process.exit();
@@ -187,7 +218,7 @@ const guessAgain = (placedBoats) => {
   makeAGuess();
 };
 
-function makeAGuess(placedBoats) {
+function makeAGuess() {
   userGuess(originalArray);
 }
 
